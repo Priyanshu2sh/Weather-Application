@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    /* Style for the entire body */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f8ff;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        text-align: center;
+    }
+
+    /* Style for the form container */
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    /* Style for the input fields */
+    input[type="text"] {
+        padding: 10px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 200px;
+    }
+
+    /* Style for the submit button */
+    input[type="submit"] {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+
+    /* Style for the 'Show All' link */
+    .show-all-link {
+        display: inline-block;
+        margin-left: 10px;
+        color: white;
+        background-color: #007bff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+
+    .show-all-link:hover {
+        background-color: #0056b3;
+    }
+
+    /* Container for the weather data */
+    .container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    /* Container for individual city weather data */
+    .city-container {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Style for the city name */
+    .city-container h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #333;
+    }
+
+    /* Style for the temperature */
+    .city-container h2 {
+        margin: 10px 0;
+        font-size: 40px;
+        color: #007bff;
+    }
+
+    /* Style for the weather description */
+    .city-container p {
+        margin: 10px 0;
+        font-size: 16px;
+        color: #666;
+    }
+
+    /* Style for the weather icon */
+    .city-container img {
+        margin-top: 10px;
+    }
+
+    /* Style for error message */
+    .error-message {
+        color: #dc3545;
+        /* Red color for error messages */
+        font-size: 18px;
+        margin-top: 5px;
+    }
+
+    /* Style for the select input */
+    select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        margin-left: 10px;
+    }
+
+    /* Style for the remove button */
+    .city-container button {
+        padding: 10px 20px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .city-container button:hover {
+        background-color: #c82333;
+    }
+
+    /* Style for the message container */
+    #messageContainer {
+        margin-top: 20px;
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    #messageContainer p {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+    }
+</style>
+
+<body>
+
+    <!-- Display error message if any -->
+    {% if error %}
+    <p class="error-message">{{error}}</p>
+    {% endif %}
+
+    <!-- Form for submitting a city name -->
+    <div class="form-container">
+        <form method="post" action="{% url 'home' %}">
+            {% csrf_token %}
+            <input type="text" name="city" placeholder="Enter city name">
+            <input type="submit" value="submit">
+        </form>
+
+        <!-- Dropdown for selecting a city -->
+        <select name="city" id="citySelect">
+            <option value="">Select a city</option>
+            {% for city in cities %}
+            <option value="{{ city.name }}">{{ city.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Container for displaying weather data -->
+    <div class="container">
+        {% if weather_data %}
+        <div class="city-container">
+            <h1>{{weather_data.city}}</h1>
+            <h2>{{weather_data.temperature}}</h2>
+            <p>{{weather_data.description}}</p>
+            <img src="http://openweathermap.org/img/w/{{weather_data.icon}}.png" alt="{{weather_data.description}}">
+            <button onclick="deleteCity('{{ weather_data.city }}')">Remove</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Container for displaying messages -->
+    <div id="messageContainer">
+        {% if message %}
+        <p>{{ message }}</p>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript code for handling select element change and delete city functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var citySelect = document.getElementById('citySelect');
+
+            // Event listener for select element change
+            citySelect.addEventListener('change', function() {
+                var selectedCityName = this.value;
+                if (selectedCityName) {
+                    // Redirect to the same page with the selected city ID as a query parameter
+                    window.location.replace(`/api/weather/${selectedCityName}/`);
+                }
+            });
+        });
+
+        function deleteCity(cityName) {
+            window.location.replace(`/api/delete-city/${cityName}/`);
+        }
+    </script>
+</body>
+
+</html>
